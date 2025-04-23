@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jokenpô</title>
+    <link href="https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: 'IM Fell DW Pica', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        h1 {
+            color: #ff4d4d;
+            text-shadow: 0 0 10px #ff4d4d;
+            font-size: 36px;
+            margin: 20px 0;
+        }
+        #game-area {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #countdown {
+            font-size: 24px;
+            color: #00ccff;
+            margin-bottom: 20px;
+        }
+        #choices {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .choice {
+            background-color: #333;
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .choice:hover {
+            transform: scale(1.1);
+        }
+        .choice img {
+            width: 80px;
+            height: 80px;
+        }
+        #result {
+            font-size: 24px;
+            color: #00ccff;
+            margin: 20px 0;
+        }
+        #round {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        .round-choice {
+            position: relative;
+            text-align: center;
+        }
+        .round-choice img {
+            width: 100px;
+            height: 100px;
+        }
+        .round-choice p {
+            margin: 5px 0;
+            font-size: 18px;
+        }
+        .winner {
+            animation: blink 0.5s infinite;
+            border: 4px solid #ff4d4d;
+            border-radius: 10px;
+            padding: 5px;
+        }
+        @keyframes blink {
+            0% { border-color: #ff4d4d; }
+            50% { border-color: transparent; }
+            100% { border-color: #ff4d4d; }
+        }
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 28px;
+            }
+            #countdown {
+                font-size: 20px;
+            }
+            #result {
+                font-size: 20px;
+            }
+            .choice img {
+                width: 60px;
+                height: 60px;
+            }
+            .round-choice img {
+                width: 80px;
+                height: 80px;
+            }
+            .round-choice p {
+                font-size: 16px;
+            }
+            footer {
+                font-size: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Jokenpô</h1>
+    <div id="game-area">
+        <div id="countdown">Escolha sua jogada!</div>
+        <div id="choices">
+            <div class="choice" data-choice="pedra">
+                <img src="pedra.png" alt="Pedra">
+            </div>
+            <div class="choice" data-choice="papel">
+                <img src="papel.png" alt="Papel">
+            </div>
+            <div class="choice" data-choice="tesoura">
+                <img src="tesoura.png" alt="Tesoura">
+            </div>
+        </div>
+        <div id="result"></div>
+        <div id="round"></div>
+    </div>
+    <audio id="background-music" loop>
+        <source src="themesong.mp3" type="audio/mp3">
+        Seu navegador não suporta o elemento de áudio.
+    </audio>
+    <footer>Desenvolvido por MAGniphik Design Studios</footer>
+
+    <script>
+        const choices = document.querySelectorAll('.choice');
+        const countdownDiv = document.getElementById('countdown');
+        const resultDiv = document.getElementById('result');
+        const roundDiv = document.getElementById('round');
+        const audio = document.getElementById('background-music');
+        const options = ['pedra', 'papel', 'tesoura'];
+        const images = {
+            pedra: 'pedra.png',
+            papel: 'papel.png',
+            tesoura: 'tesoura.png'
+        };
+        let playerChoice = null;
+        let countdownInterval = null;
+
+        // Tentar tocar a música (desativado por padrão devido a restrições de navegadores)
+        // audio.play().catch(() => console.log('Autoplay bloqueado. Interação necessária.'));
+
+        function startCountdown() {
+            let timeLeft = 5;
+            countdownDiv.textContent = `Contagem: ${timeLeft}`;
+            choices.forEach(choice => choice.style.pointerEvents = 'auto');
+            resultDiv.textContent = '';
+            roundDiv.innerHTML = '';
+            clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                countdownDiv.textContent = `Contagem: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    playRound();
+                }
+            }, 1000);
+        }
+
+        function playRound() {
+            if (!playerChoice) {
+                resultDiv.textContent = 'Você não escolheu! Tente novamente.';
+                choices.forEach(choice => choice.style.pointerEvents = 'auto');
+                return;
+            }
+
+            const computerChoice = options[Math.floor(Math.random() * 3)];
+            const winner = determineWinner(playerChoice, computerChoice);
+
+            // Exibir escolhas da rodada
+            roundDiv.innerHTML = `
+                <div class="round-choice ${winner === 'player' ? 'winner' : ''}">
+                    <img src="${images[playerChoice]}" alt="${playerChoice}">
+                    <p>Jogador</p>
+                </div>
+                <div class="round-choice ${winner === 'computer' ? 'winner' : ''}">
+                    <img src="${images[computerChoice]}" alt="${computerChoice}">
+                    <p>Computador</p>
+                </div>
+            `;
+
+            // Exibir resultado
+            if (winner === 'draw') {
+                resultDiv.textContent = 'Empate!';
+            } else if (winner === 'player') {
+                resultDiv.textContent = 'Você venceu!';
+            } else {
+                resultDiv.textContent = 'Computador venceu!';
+            }
+
+            // Remover efeito de piscar após 5 segundos
+            setTimeout(() => {
+                document.querySelectorAll('.winner').forEach(el => el.classList.remove('winner'));
+                playerChoice = null;
+                startCountdown();
+            }, 5000);
+
+            choices.forEach(choice => choice.style.pointerEvents = 'none');
+        }
+
+        function determineWinner(player, computer) {
+            if (player === computer) return 'draw';
+            if (
+                (player === 'pedra' && computer === 'tesoura') ||
+                (player === 'papel' && computer === 'pedra') ||
+                (player === 'tesoura' && computer === 'papel')
+            ) return 'player';
+            return 'computer';
+        }
+
+        choices.forEach(choice => {
+            choice.addEventListener('click', () => {
+                playerChoice = choice.dataset.choice;
+                choices.forEach(c => c.style.pointerEvents = 'none');
+                countdownDiv.textContent = 'Escolha confirmada!';
+            });
+        });
+
+        // Iniciar a primeira contagem
+        startCountdown();
+    </script>
+</body>
+</html>
