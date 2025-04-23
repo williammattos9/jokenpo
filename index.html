@@ -87,6 +87,10 @@
             50% { border-color: transparent; }
             100% { border-color: #ff4d4d; }
         }
+        audio {
+            margin: 20px 0;
+            filter: sepia(20%); /* Estilização para combinar com o tema */
+        }
         footer {
             margin-top: auto;
             padding: 20px;
@@ -118,6 +122,9 @@
             footer {
                 font-size: 8px;
             }
+            audio {
+                width: 90%; /* Ajusta controles para mobile */
+            }
         }
     </style>
 </head>
@@ -138,9 +145,9 @@
         </div>
         <div id="result"></div>
         <div id="round"></div>
-    </div>
-    <audio id="background-music" loop>
-        <source src="themesong.mp3" type="audio/mp3">
+    🙂
+    <audio id="background-music" controls loop>
+        <source src="theme.mp3" type="audio/mp3">
         Seu navegador não suporta o elemento de áudio.
     </audio>
     <footer>Desenvolvido por MAGniphik Design Studios</footer>
@@ -159,9 +166,18 @@
         };
         let playerChoice = null;
         let countdownInterval = null;
+        let audioStarted = false;
 
-        // Tentar tocar a música (desativado por padrão devido a restrições de navegadores)
-        // audio.play().catch(() => console.log('Autoplay bloqueado. Interação necessária.'));
+        function startAudio() {
+            if (!audioStarted) {
+                audio.play().then(() => {
+                    audioStarted = true;
+                    console.log('Áudio iniciado com sucesso.');
+                }).catch(error => {
+                    console.error('Erro ao iniciar o áudio:', error);
+                });
+            }
+        }
 
         function startCountdown() {
             let timeLeft = 5;
@@ -237,6 +253,7 @@
                 playerChoice = choice.dataset.choice;
                 choices.forEach(c => c.style.pointerEvents = 'none');
                 countdownDiv.textContent = 'Escolha confirmada!';
+                startAudio(); // Tenta iniciar o áudio no primeiro clique
             });
         });
 
